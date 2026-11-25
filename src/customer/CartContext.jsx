@@ -27,14 +27,20 @@ function reducer(lines, a) {
 export function CartProvider({ children }) {
   const [lines, dispatch] = useReducer(reducer, [])
   const [note, setNote] = useState('')
+  const [coupon, setCoupon] = useState(null) // { code, type, value, min }
+  const [tipPct, setTipPct] = useState(0)
 
   const value = useMemo(
     () => ({
       lines,
       note,
       setNote,
+      coupon,
+      setCoupon,
+      tipPct,
+      setTipPct,
       count: lines.reduce((a, l) => a + l.qty, 0),
-      totals: calcTotals(lines),
+      totals: calcTotals(lines, coupon, tipPct),
       qtyOf: (id) => lines.find((l) => l.id === id)?.qty || 0,
       add: (item, qty = 1, n = '') => dispatch({ type: 'add', item, qty, note: n }),
       inc: (id) => dispatch({ type: 'inc', id }),
@@ -42,9 +48,11 @@ export function CartProvider({ children }) {
       clear: () => {
         dispatch({ type: 'clear' })
         setNote('')
+        setCoupon(null)
+        setTipPct(0)
       },
     }),
-    [lines, note]
+    [lines, note, coupon, tipPct]
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

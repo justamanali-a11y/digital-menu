@@ -2,23 +2,32 @@ import { useState } from 'react'
 import { actions } from '../store/shopStore'
 import { fmt } from '../lib/format'
 import { beep, toast } from '../lib/toast'
+import { useT } from '../lib/i18n'
 import { useCart } from './CartContext'
-import { Header } from './CartScreen'
+import PhoneHeader from './PhoneHeader'
 
-const OPTIONS = [
-  { key: 'upi', title: 'Pay with UPI', sub: 'Google Pay, PhonePe, Paytm or any UPI app' },
-  { key: 'counter', title: 'Pay at counter', sub: 'Pay when you finish your meal' },
-]
-
-export default function PaymentScreen({ table, onBack, onPlaced }) {
+export default function PaymentScreen({ table, onBack, onPlaced, onHelp }) {
+  const t = useT()
   const cart = useCart()
   const [pay, setPay] = useState('upi')
   const { gst, total } = cart.totals
 
+  const options = [
+    { key: 'upi', title: t('upi'), sub: t('upiSub') },
+    { key: 'counter', title: t('counter'), sub: t('counterSub') },
+  ]
+
   const place = () => {
     if (!cart.lines.length) return
     // TODO: for UPI, open the Razorpay checkout here and place the order only after payment succeeds.
-    const order = actions.placeOrder({ table, lines: cart.lines, note: cart.note, pay })
+    const order = actions.placeOrder({
+      table,
+      lines: cart.lines,
+      note: cart.note,
+      pay,
+      totals: cart.totals,
+      couponCode: cart.coupon && cart.totals.discount > 0 ? cart.coupon.code : '',
+    })
     cart.clear()
     beep()
     toast(`Order #${order.id} sent to the kitchen`)
@@ -28,19 +37,19 @@ export default function PaymentScreen({ table, onBack, onPlaced }) {
   return (
     <>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <Header title="Payment" table={table} onBack={onBack} />
+        <PhoneHeader title={t('payment')} table={table} onBack={onBack} onHelp={onHelp} />
         <div className="flex flex-col gap-3.5 px-4 pb-5 pt-1">
           <div className="card">
             <div className="flex justify-between text-base font-bold">
-              <span>Amount to pay</span>
+              <span>{t('amountToPay')}</span>
               <span className="tabular-nums">{fmt(total)}</span>
             </div>
             <div className="text-[12.5px] text-mute">
-              {cart.count} item{cart.count > 1 ? 's' : ''} · incl. GST {fmt(gst)}
+              {cart.count} {cart.count > 1 ? t('items') : t('item')} · {t('inclGst')} {fmt(gst)}
             </div>
           </div>
 
-          {OPTIONS.map((o) => (
+          {options.map((o) => (
             <button
               key={o.key}
               onClick={() => setPay(o.key)}
@@ -62,11 +71,7 @@ export default function PaymentScreen({ table, onBack, onPlaced }) {
             </button>
           ))}
 
-          {pay === 'upi' && (
-            <p className="text-[12.5px] text-mute">
-              Demo mode: no real payment is taken. A payment gateway connects in the full build.
-            </p>
-          )}
+          {pay === 'upi' && <p className="text-[12.5px] text-mute">{t('demoPay')}</p>}
         </div>
       </div>
       <div
@@ -74,7 +79,7 @@ export default function PaymentScreen({ table, onBack, onPlaced }) {
         style={{ paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))' }}
       >
         <button className="btn w-full" onClick={place}>
-          {pay === 'upi' ? `Pay ${fmt(total)}` : 'Place order'}
+          {pay === 'upi' ? `${t('pay')} ${fmt(total)}` : t('placeOrder')}
         </button>
       </div>
     </>

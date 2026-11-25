@@ -5,6 +5,7 @@ import ItemSheet from './ItemSheet'
 import CartScreen from './CartScreen'
 import PaymentScreen from './PaymentScreen'
 import StatusScreen from './StatusScreen'
+import HelpSheet from './HelpSheet'
 
 // Customer phone app. Give it a parent with a fixed height (phone frame or h-[100dvh]).
 export default function CustomerApp({ table }) {
@@ -20,26 +21,29 @@ function Screens({ table }) {
   const [screen, setScreen] = useState('menu') // menu | cart | pay | status
   const [orderId, setOrderId] = useState(null)
   const [sheetItem, setSheetItem] = useState(null)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const onHelp = () => setHelpOpen(true)
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-cream">
       {screen === 'menu' && (
-        <MenuScreen table={table} onOpen={setSheetItem} onGoCart={() => setScreen('cart')} />
+        <MenuScreen table={table} onOpen={setSheetItem} onGoCart={() => setScreen('cart')} onHelp={onHelp} />
       )}
       {screen === 'cart' && (
-        <CartScreen table={table} onBack={() => setScreen('menu')} onPay={() => setScreen('pay')} />
+        <CartScreen table={table} onBack={() => setScreen('menu')} onPay={() => setScreen('pay')} onHelp={onHelp} />
       )}
       {screen === 'pay' && (
         <PaymentScreen
           table={table}
           onBack={() => setScreen('cart')}
+          onHelp={onHelp}
           onPlaced={(id) => {
             setOrderId(id)
             setScreen('status')
           }}
         />
       )}
-      {screen === 'status' && <StatusScreen orderId={orderId} onMore={() => setScreen('menu')} />}
+      {screen === 'status' && <StatusScreen orderId={orderId} onMore={() => setScreen('menu')} onHelp={onHelp} />}
 
       {sheetItem && (
         <ItemSheet
@@ -51,6 +55,7 @@ function Screens({ table }) {
           }}
         />
       )}
+      {helpOpen && <HelpSheet table={table} onClose={() => setHelpOpen(false)} />}
     </div>
   )
 }

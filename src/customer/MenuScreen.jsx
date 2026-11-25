@@ -2,12 +2,21 @@ import { useMemo, useState } from 'react'
 import { CATS } from '../data/menu'
 import { useShop } from '../store/shopStore'
 import { fmt } from '../lib/format'
+import { useT } from '../lib/i18n'
 import DishArt from '../components/DishArt'
 import VegDot from '../components/VegDot'
 import Stepper from '../components/Stepper'
 import { useCart } from './CartContext'
+import PhoneHeader from './PhoneHeader'
 
-export default function MenuScreen({ table, onOpen, onGoCart }) {
+export const TAG_STYLE = {
+  bestseller: 'bg-brand-100 text-brand-600',
+  new: 'bg-ok-soft text-ok',
+  chef: 'bg-warn-soft text-warn',
+}
+
+export default function MenuScreen({ table, onOpen, onGoCart, onHelp }) {
+  const t = useT()
   const { items } = useShop()
   const cart = useCart()
   const [cat, setCat] = useState('All')
@@ -29,38 +38,30 @@ export default function MenuScreen({ table, onOpen, onGoCart }) {
   return (
     <>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="flex items-center gap-2.5 px-4 pb-2 pt-3.5">
-          <span className="grid h-8 w-8 flex-none place-items-center rounded-[10px] bg-brand-600 font-head text-[13px] font-bold text-white">
-            SR
-          </span>
-          <div className="flex-1 font-head text-base font-semibold">Spice Route</div>
-          <span className="whitespace-nowrap rounded-full bg-brand-100 px-2.5 py-1 text-xs font-semibold text-brand-600">
-            Table {table}
-          </span>
-        </div>
+        <PhoneHeader title="Spice Route" table={table} onHelp={onHelp} />
 
         <div className="flex flex-col gap-3.5 px-4 pb-5 pt-1">
-          <h1 className="text-2xl font-semibold leading-tight">What are you craving?</h1>
+          <h1 className="text-2xl font-semibold leading-tight">{t('craving')}</h1>
           <input
             type="search"
             className="input"
-            placeholder="Search dishes"
-            aria-label="Search dishes"
+            placeholder={t('search')}
+            aria-label={t('search')}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
           <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
             {['All', ...CATS].map((c) => (
               <button key={c} className={`chip ${cat === c ? 'chip-on' : ''}`} onClick={() => setCat(c)}>
-                {c}
+                {c === 'All' ? t('all') : t('cat.' + c)}
               </button>
             ))}
           </div>
           <div className="flex gap-1.5">
             {[
-              ['all', 'All'],
-              ['veg', 'Veg'],
-              ['nonveg', 'Non-veg'],
+              ['all', t('all')],
+              ['veg', t('veg')],
+              ['nonveg', t('nonveg')],
             ].map(([k, label]) => (
               <button
                 key={k}
@@ -76,8 +77,8 @@ export default function MenuScreen({ table, onOpen, onGoCart }) {
 
           {rows.length === 0 && (
             <div className="flex flex-col items-center gap-2 py-12 text-center text-mute">
-              <h3 className="text-base text-ink">No dishes found</h3>
-              <span>Try another search or filter.</span>
+              <h3 className="text-base text-ink">{t('noDishes')}</h3>
+              <span>{t('tryAnother')}</span>
             </div>
           )}
 
@@ -89,7 +90,9 @@ export default function MenuScreen({ table, onOpen, onGoCart }) {
               return (
                 <div key={i.id} className="contents">
                   {header && (
-                    <div className="mt-2 font-head text-[13px] uppercase tracking-[0.08em] text-mute">{i.cat}</div>
+                    <div className="mt-2 font-head text-[13px] uppercase tracking-[0.08em] text-mute">
+                      {t('cat.' + i.cat)}
+                    </div>
                   )}
                   <div
                     role="button"
@@ -109,16 +112,24 @@ export default function MenuScreen({ table, onOpen, onGoCart }) {
                       <DishArt hue={i.hue} cat={i.cat} />
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <div className="flex items-center gap-1.5 font-semibold">
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-semibold">
                         <VegDot veg={i.veg} />
                         {i.name}
+                        {(i.tags || []).map((tag) => (
+                          <span
+                            key={tag}
+                            className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${TAG_STYLE[tag]}`}
+                          >
+                            {t(tag)}
+                          </span>
+                        ))}
                       </div>
                       <p className="line-clamp-2 text-[12.5px] text-mute">{i.desc}</p>
                       <div className="mt-auto flex items-center justify-between gap-2">
                         <span className="font-bold tabular-nums">{fmt(i.price)}</span>
                         {!i.stock ? (
                           <span className="rounded-full bg-sand px-2.5 py-1 text-xs font-semibold text-mute">
-                            Sold out
+                            {t('soldOut')}
                           </span>
                         ) : n ? (
                           <span onClick={(e) => e.stopPropagation()}>
@@ -132,7 +143,7 @@ export default function MenuScreen({ table, onOpen, onGoCart }) {
                               cart.add(i)
                             }}
                           >
-                            Add
+                            {t('add')}
                           </button>
                         )}
                       </div>
@@ -152,7 +163,7 @@ export default function MenuScreen({ table, onOpen, onGoCart }) {
           style={{ marginBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}
         >
           <span>
-            View cart · {cart.count} item{cart.count > 1 ? 's' : ''}
+            {t('viewCart')} · {cart.count} {cart.count > 1 ? t('items') : t('item')}
           </span>
           <span className="tabular-nums">{fmt(cart.totals.sub)}</span>
         </button>

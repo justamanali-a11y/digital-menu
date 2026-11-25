@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { fmt } from '../lib/format'
+import { useT } from '../lib/i18n'
 import DishArt from '../components/DishArt'
 import VegDot from '../components/VegDot'
 import Stepper from '../components/Stepper'
+import { TAG_STYLE } from './MenuScreen'
 
 export default function ItemSheet({ item, onClose, onAdd }) {
+  const t = useT()
   const [qty, setQty] = useState(1)
   const [note, setNote] = useState('')
 
@@ -31,16 +34,34 @@ export default function ItemSheet({ item, onClose, onAdd }) {
               ✕
             </button>
           </div>
-          <div className="flex items-center gap-1.5 font-medium text-mute">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-mute">
             <VegDot veg={item.veg} />
-            {item.veg ? 'Vegetarian' : 'Non-vegetarian'} · {item.cat}
+            {item.veg ? t('vegetarian') : t('nonVegetarian')} · {t('cat.' + item.cat)}
+            {(item.tags || []).map((tag) => (
+              <span key={tag} className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${TAG_STYLE[tag]}`}>
+                {t(tag)}
+              </span>
+            ))}
           </div>
+          {item.spice > 0 && (
+            <div className="flex items-center gap-2 text-[13px] text-mute">
+              {t('spice')}
+              <span className="flex gap-1" aria-label={`${item.spice} of 3`}>
+                {[1, 2, 3].map((n) => (
+                  <span
+                    key={n}
+                    className={`h-2.5 w-2.5 rounded-full ${n <= item.spice ? 'bg-bad' : 'bg-line'}`}
+                  />
+                ))}
+              </span>
+            </div>
+          )}
           <p>{item.desc}</p>
           <label className="flex flex-col gap-1.5 font-semibold">
-            Special note
+            {t('note')}
             <textarea
               className="input min-h-[64px] resize-y font-normal"
-              placeholder="For example: less spicy, no onion"
+              placeholder={t('notePh')}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -48,7 +69,7 @@ export default function ItemSheet({ item, onClose, onAdd }) {
           <div className="flex items-center gap-3">
             <Stepper big qty={qty} onInc={() => setQty(qty + 1)} onDec={() => setQty(Math.max(1, qty - 1))} />
             <button className="btn flex-1" onClick={() => onAdd(qty, note.trim())}>
-              Add to cart · {fmt(item.price * qty)}
+              {t('addToCart')} · {fmt(item.price * qty)}
             </button>
           </div>
         </div>

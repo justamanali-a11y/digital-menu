@@ -1,4 +1,8 @@
+import { useState } from 'react'
+import { ROLES, ROLE_LABEL } from './roles'
+
 export default function Login({ onSignIn }) {
+  const [role, setRole] = useState('owner')
   return (
     <div className="grid min-h-[780px] md:grid-cols-2">
       <div className="flex flex-col justify-center gap-3.5 bg-brand-100 p-9">
@@ -17,7 +21,7 @@ export default function Login({ onSignIn }) {
         className="flex max-w-[420px] flex-col justify-center gap-3 p-9"
         onSubmit={(e) => {
           e.preventDefault()
-          onSignIn()
+          onSignIn(role)
         }}
       >
         <h2 className="text-lg font-semibold">Welcome back</h2>
@@ -29,10 +33,22 @@ export default function Login({ onSignIn }) {
           Password
           <input className="input font-normal" type="password" defaultValue="demo-password" />
         </label>
+        <label className="flex flex-col gap-1 font-medium">
+          Sign in as
+          <select className="input font-normal" value={role} onChange={(e) => setRole(e.target.value)}>
+            {ROLES.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABEL[r]}
+              </option>
+            ))}
+          </select>
+        </label>
         <button className="btn" type="submit">
           Sign in
         </button>
-        <p className="text-[12.5px] text-mute">Demo login. Any details work. Real sign-in comes with Firebase Auth.</p>
+        <p className="text-[12.5px] text-mute">
+          Demo login. Any details work, and the role decides which tabs you see. Real sign-in comes with Firebase Auth.
+        </p>
       </form>
     </div>
   )
